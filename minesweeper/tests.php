@@ -1,5 +1,5 @@
 <?php
-include 'Solver.php';
+$inputFile = 'input.txt';
 
 // Should not have leading spaces for the lines
 $tests = [
@@ -32,12 +32,12 @@ Field #2:
     ],
 ];
 
-$solver = new Solver();
 foreach ($tests as $test) {
     [$name, $input, $expectedOutput] = $test;
 
+    file_put_contents($inputFile, trim($input));
+    $actualOutput = trim(shell_exec("php run.php < {$inputFile}"));
     $expectedOutput = trim($expectedOutput);
-    $actualOutput = trim($solver($input));
     $passed = ($actualOutput == $expectedOutput);
 
     printf(

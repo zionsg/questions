@@ -8,10 +8,9 @@ class Solver
      * @param string $input
      * @return string
      */
-    public function __invoke($input)
+    public function __invoke()
     {
         $output = '';
-        $lines = explode("\n", trim($input));
 
         $inMine = false;
         $fieldCnt = 0;
@@ -19,7 +18,7 @@ class Solver
         $m = 0;
         $row = 0;
         $result = [];
-        foreach ($lines as $line) {
+        while ($line = fgets(STDIN)) {
             $columns = str_split(trim($line));
 
             // Get n & m
@@ -29,7 +28,7 @@ class Solver
                     $m = $columns[2];
 
                     if (0 == $n && 0 == $m) { // cannot use ===
-                        return $output;
+                        return trim($output) . "\n";
                     }
 
                     $inMine = true;
