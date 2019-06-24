@@ -5,7 +5,6 @@ class Solver
     /**
      * Solve question
      *
-     * @param string $input
      * @return string
      */
     public function __invoke()
