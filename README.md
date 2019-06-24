@@ -4,7 +4,9 @@ My attempted solutions to coding questions.
 ## Convention
 In the interest of simplicity, here are some conventions that this repository will be keeping to:
 - One folder per question.
-- There will be exactly 3 files in the folder: `Solver.php`, `run.php`, `tests.php`.
+- There will be exactly 4 files in the folder: `README.md`, `Solver.php`, `run.php`, `tests.php`.
+- `README.md`:
+    + Description of question in Markdown format.
 - `Solver.php`:
     + This contains the solution.
     + The file shall contain exactly 1 class, `Solver`. No namespace is required.
