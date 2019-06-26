@@ -1,5 +1,13 @@
 <?php
 
+/**
+ * Minesweeper solver
+ *
+ * Algorithm:
+ *   - Use a one-based array to record mines and hints for each minefield.
+ *   - When a mine is hit, increment the surrounding 8 cells by 1. If a surrounding cell contains a mine, leave it.
+ *   - When printing out the minefield, ignore indices 0 and (m + 1) in the array.
+ */
 class Solver
 {
     /**
@@ -11,17 +19,17 @@ class Solver
     {
         $output = '';
 
-        $inMine = false;
+        $inMinefield = false;
         $fieldCnt = 0;
-        $n = 0;
-        $m = 0;
+        $n = 0; // no. of lines in minefield
+        $m = 0; // no. of columns per line in minefield
         $row = 0;
         $result = [];
         while ($line = fgets(STDIN)) {
             $columns = str_split(trim($line));
 
             // Get n & m
-            if (!$inMine) {
+            if (!$inMinefield) {
                 if (3 == count($columns)) { // "n m" => [n, ' ', m]
                     $n = $columns[0];
                     $m = $columns[2];
@@ -30,7 +38,7 @@ class Solver
                         return trim($output) . "\n";
                     }
 
-                    $inMine = true;
+                    $inMinefield = true;
                     $fieldCnt++;
                     $row = 0;
                     $result = [];
@@ -47,7 +55,7 @@ class Solver
                     continue;
                 }
 
-                // all the 8 cells adjacent to the mine will be incremented by 1
+                // all the 8 cells surrounding the mine will be incremented by 1
                 $result[$row - 1][$col - 1] = $this->inc($result[$row - 1][$col - 1] ?? 0); // top diagonal left
                 $result[$row - 1][$col]     = $this->inc($result[$row - 1][$col] ?? 0); // top center
                 $result[$row - 1][$col + 1] = $this->inc($result[$row - 1][$col + 1] ?? 0); // top diagonal right
@@ -61,7 +69,7 @@ class Solver
 
             // When all rows in minefield covered, print out minefield with hints
             if ($n == $row) { // cannot use ===
-                $inMine = false; // for next iteration
+                $inMinefield = false; // for next iteration
 
                 for ($i = 1; $i <= ($n * $m); $i++) {
                     $row = ceil($i / $m);

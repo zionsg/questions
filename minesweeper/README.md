@@ -2,8 +2,6 @@
 
 From: http://codingdojo.org/kata/Minesweeper/
 
-Time taken: About 90 mins.
-
 ## Question reproduced below:
 Minesweeper
 About this Kata
