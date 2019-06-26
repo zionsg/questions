@@ -3,7 +3,7 @@ My attempted solutions to coding questions.
 
 ## Convention
 In the interest of simplicity, here are some conventions that this repository will be keeping to:
-- One folder per question.
+- One folder per question. The folder shall use the `StudlyCase` naming convention.
 - There will be exactly 4 files in the folder: `README.md`, `Solver.php`, `run.php`, `tests.php`.
 - `README.md`:
     + Description of question in Markdown format.
