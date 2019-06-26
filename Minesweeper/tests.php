@@ -1,9 +1,10 @@
 <?php
-$inputFile = 'input.txt';
 
-// Should not have leading spaces for the lines
-$tests = [
-    [
+require '../src/Tester.php';
+
+$tester = new Tester();
+echo $tester->runTestSuite([
+    [   // Should not have leading spaces for the lines
         'Test 01',
         "
 4 4
@@ -30,24 +31,5 @@ Field #2:
 1*100
         ",
     ],
-];
 
-foreach ($tests as $test) {
-    [$name, $input, $expectedOutput] = $test;
-
-    file_put_contents($inputFile, trim($input));
-    $actualOutput = trim(shell_exec("php run.php < {$inputFile}"));
-    $expectedOutput = trim($expectedOutput);
-    $passed = ($actualOutput == $expectedOutput);
-
-    printf(
-        'Test "%s": %s' . "\n",
-        $name,
-        $passed ? 'passed' : 'FAILED'
-    );
-
-    if (!$passed) {
-        echo "Expected output:-----\n{$expectedOutput}\n-----\n\n";
-        echo "Actual output:-----\n{$actualOutput}\n-----\n\n";
-    }
-}
+]);

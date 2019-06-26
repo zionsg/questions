@@ -12,6 +12,7 @@ In the interest of simplicity, here are some conventions that this repository wi
     + The file shall contain exactly 1 class, `Solver`. No namespace is required.
     + The class shall have an empty constructor.
     + The class shall implement `__invoke()` which reads in from `STDIN` and returns the output.
+    + The output will always be a string, as it needs to be displayed in the console.
     + Sample of how the solution will be run:
 
       ```
@@ -31,7 +32,7 @@ In the interest of simplicity, here are some conventions that this repository wi
 - `tests.php`
     + This runs a test suite of test inputs against `run.php`.
     + It shall contain an array of tests.
-    + Each test will be an array of 3 elements - the test name, the input and the expected output.
+    + Each test will be an array of 3 elements (all strings) - the test name, the input and the expected output.
     + The file shall end with a simple loop to run thru the tests. The input will be stored as `input.txt` and
       fed into `run.php`, i.e. `php run.php < input.txt`.
     + To run the tests, type `php tests.php` in the folder for the question.
