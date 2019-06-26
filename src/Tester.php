@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * Simple boilerplate class to run tests in console
+ */
 class Tester
 {
     const INPUT_FILENAME = 'input.txt';
