@@ -21,12 +21,18 @@
  */
 class Solver
 {
+    /** @var bool Debug flag */
+    const DEBUG = false;
+
     /** @var int Single copy of n & m */
     protected $n = 0; // no. of elements in array
     protected $m = 0; // no. of queries
 
     /** @var array Single copy of offsets to avoid passing around */
     protected $offsets = [];
+
+    /** @var int Length of longest number in elements (can be positive or negative). For debugging */
+    protected $longestNumLen = 2; // num can be -9, 10, 99, etc.
 
     /**
      * Solve question
@@ -57,6 +63,22 @@ class Solver
                         $this->offsets[$i] = $elements[$i - 1] - ($elements[$i - 2] ?? 0);
                     }
 
+                    // For debugging
+                    if (self::DEBUG) {
+                        $positions = range(1, $this->n);
+                        $smallestNum = min($elements);
+                        $largestNum = max($elements);
+                        $this->longestNumLen = max(
+                            strlen($smallestNum),
+                            strlen($largestNum),
+                            strlen($largestNum - $smallestNum)
+                        );
+                        echo "n: {$this->n}, m: {$this->m}\n";
+                        echo "Positions:   " . $this->printArray($positions) . "\n";
+                        echo "Elements:    " . $this->printArray($elements) . "\n";
+                        echo "Old offsets: " . $this->printArray($this->offsets) . "\n";
+                    }
+
                     $isStarted = true;
                     $queryCnt = 0;
                     continue;
@@ -71,6 +93,21 @@ class Solver
             // Apply updates
             foreach ($updates as $pos => $value) {
                 $this->offsets[$pos] = $value;
+            }
+
+            // For debugging
+            if (self::DEBUG) {
+                $value = 0;
+                $result = [];
+                for ($i = 1; $i <= $this->n; $i++) {
+                    $value += ($this->offsets[$i] ?? 0);
+                    $result[] = $value;
+                }
+                echo "\nQuery #$queryCnt: $type $start $end\n";
+                echo "Updates: " . json_encode($updates) . "\n";
+                echo "Positions:   " . $this->printArray($positions) . "\n";
+                echo "New offsets: " . $this->printArray($this->offsets) . "\n";
+                echo "New elements:" . $this->printArray($result) . "\n\n";
             }
 
             if ($queryCnt == $this->m) {
@@ -167,6 +204,7 @@ class Solver
                 $value += $this->offsets[$i] ?? 0;
             }
             $updates[$pos] = $value;
+            // echo "[A] pos:$pos value:$value\n";
 
             // update offset [n - blockLength], the new start position of the query block
             $pos = $this->n - $blockLength + 1;
@@ -175,17 +213,20 @@ class Solver
                 $value -= $this->offsets[$i] ?? 0;
             }
             $updates[$pos] = $value;
+            // echo "[B] pos:$pos value:$value\n";
 
             // maintain offsets in block after query block before moving
             for ($i = ($end + 2); $i <= $this->n; $i++) {
                 $pos = $i - $blockLength;
                 $updates[$pos] = $this->offsets[$i];
+                // echo "[C] i:$i pos:$pos offset:{$this->offsets[$i]}\n";
             }
 
             // maintain offsets in query block to be moved
             for ($i = ($start + 1); $i <= $end; $i++) { // don't touch [start] cos already modified
-                $pos = $i + $blockLength;
+                $pos = $this->n - $blockLength + ($i - $start + 1);
                 $updates[$pos] = $this->offsets[$i];
+                // echo "[D] i:$i pos:$pos offset:{$this->offsets[$i]}\n";
             }
 
             return $updates;
@@ -204,8 +245,9 @@ class Solver
     {
         $output = '';
 
+        $padLen = $this->longestNumLen + 2; // +2 for space and negative sign
         foreach ($arr as $val) {
-            $output .= str_pad($val, 3, ' ', STR_PAD_LEFT);
+            $output .= str_pad($val, $padLen, ' ', STR_PAD_LEFT);
         }
 
         return $output;
