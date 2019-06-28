@@ -2,6 +2,22 @@
 
 /**
  * Solver for Arrays and Simple Queries
+ *
+ * Algorithm
+ *   - Calculate offsets for original elements, i.e. offset of 2nd element from 1st, 3rd element from 2nd, etc.
+ *   - Offset array is one-based, to correspond to one-based positions of elements.
+ *   - Query syntax: type start end.
+ *   - Query type 1: Move query block to front of elements.
+ *       + Close gap, i.e. compute new offset for position after [end] before moving query block.
+ *       + Compute new offset for position after [end] after moving block.
+ *       + Compute new offset for position 1.
+ *       + Maintain offsets of block sitting between old and new positions of query block.
+ *       + Maintain offsets within query block.
+ *   - Query type 2: Move query block to rear of elements.
+ *       + Close gap, i.e. compute new offset for position at [start] before moving query block.
+ *       + Compute new offset for position at [start] after moving block.
+ *       + Maintain offsets of block sitting between old and new positions of query block.
+ *       + Maintain offsets within query block.
  */
 class Solver
 {
@@ -41,12 +57,6 @@ class Solver
                         $this->offsets[$i] = $elements[$i - 1] - ($elements[$i - 2] ?? 0);
                     }
 
-/*
-echo "n: {$this->n}, m: {$this->m}\n";
-echo "Elements:    " . $this->printArray($elements) . "\n";
-echo "Old offsets: " . $this->printArray($this->offsets) . "\n";
-*/
-
                     $isStarted = true;
                     $queryCnt = 0;
                     continue;
@@ -55,26 +65,13 @@ echo "Old offsets: " . $this->printArray($this->offsets) . "\n";
 
             // Reaching this point means we have started with the queries
             $queryCnt++;
-            [$command, $start, $end] = $columns;
-            $updates = $this->runQuery($command, $start, $end);
+            [$type, $start, $end] = $columns;
+            $updates = $this->runQuery($type, $start, $end);
 
             // Apply updates
             foreach ($updates as $pos => $value) {
                 $this->offsets[$pos] = $value;
             }
-
-        /*
-        $value = 0;
-        $result = [];
-        for ($i = 1; $i <= $this->n; $i++) {
-            $value += ($this->offsets[$i] ?? 0);
-            $result[] = $value;
-        }
-        echo "\nCommand: $command $start $end\n";
-        echo "Updates: " . json_encode($updates) . "\n";
-        echo "New offsets: " . $this->printArray($this->offsets) . "\n";
-        echo "New elements:" . $this->printArray($result) . "\n\n";
-        */
 
             if ($queryCnt == $this->m) {
                 break;
@@ -97,22 +94,28 @@ echo "Old offsets: " . $this->printArray($this->offsets) . "\n";
     /**
      * Run query and compute updates to offsets
      *
-     * @param int $command
+     * @param int $type
      * @param int $start
      * @param int $end
      * @return array Updated offsets indexed by position
      */
-    protected function runQuery($command, $start, $end)
+    protected function runQuery($type, $start, $end)
     {
         $updates = [];
 
         // Move to front
-        if (1 == $command) { // move to front
+        if (1 == $type) { // move to front
+            if (1 == $start) {
+                return []; // already in front
+            }
+
+            $blockLength = $end - $start + 1;
+
             // close gap - update offset [end + 1]
             if ($end < $this->n) {
                 $pos = $end + 1;
-                $value = $this->offsets[$pos] ?? 0;
-                for ($i = $start; $i <= $end; $i++) {
+                $value = 0;
+                for ($i = $start; $i <= ($end + 1); $i++) {
                     $value += $this->offsets[$i] ?? 0;
                 }
                 $updates[$pos] = $value;
@@ -134,14 +137,13 @@ echo "Old offsets: " . $this->printArray($this->offsets) . "\n";
             }
             $updates[$pos] = $value;
 
-            // maintain offsets in block before block to be moved
-            $blockLength = $end - $start + 1;
+            // maintain offsets in block before query block before moving
             for ($i = 2; $i <= ($start -1); $i++) {
                 $pos = $i + $blockLength;
                 $updates[$pos] = $this->offsets[$i];
             }
 
-            // maintain offsets in block to be moved
+            // maintain offsets in query block to be moved
             for ($i = ($start + 1); $i <= $end; $i++) {
                 $pos = $i - $start + 1;
                 $updates[$pos] = $this->offsets[$i];
@@ -151,23 +153,39 @@ echo "Old offsets: " . $this->printArray($this->offsets) . "\n";
         }
 
         // Move to rear
-        if (2 == $command) {
-            if ($end < $this->n) {
-                // close gap - update offset[start]
-                $pos = $start;
-                $value = $this->offsets[$pos] ?? 0;
-                for ($i = ($start + 1); $i <= ($end + 1); $i++) {
-                    $value += $this->offsets[$i] ?? 0;
-                }
-                $updates[$pos] = $value;
+        if (2 == $type) {
+            if ($end == $this->n) {
+                return []; // alr at the rear
+            }
 
-                // update offset [n - blockLength]
-                $pos = $this->n - ($end - $start);
-                $value = 0;
-                for ($i = ($start + 1); $i <= $this->n; $i++) {
-                    $value -= $this->offsets[$i] ?? 0;
-                }
-                $updates[$pos] = $value;
+            $blockLength = $end - $start + 1;
+
+            // close gap - update offset[start]
+            $pos = $start;
+            $value = 0;
+            for ($i = $start; $i <= ($end + 1); $i++) {
+                $value += $this->offsets[$i] ?? 0;
+            }
+            $updates[$pos] = $value;
+
+            // update offset [n - blockLength], the new start position of the query block
+            $pos = $this->n - $blockLength + 1;
+            $value = 0;
+            for ($i = ($start + 1); $i <= $this->n; $i++) {
+                $value -= $this->offsets[$i] ?? 0;
+            }
+            $updates[$pos] = $value;
+
+            // maintain offsets in block after query block before moving
+            for ($i = ($end + 2); $i <= $this->n; $i++) {
+                $pos = $i - $blockLength;
+                $updates[$pos] = $this->offsets[$i];
+            }
+
+            // maintain offsets in query block to be moved
+            for ($i = ($start + 1); $i <= $end; $i++) { // don't touch [start] cos already modified
+                $pos = $i + $blockLength;
+                $updates[$pos] = $this->offsets[$i];
             }
 
             return $updates;
@@ -177,7 +195,7 @@ echo "Old offsets: " . $this->printArray($this->offsets) . "\n";
     }
 
     /**
-     * Print array with consistent spacing, catering for negative numbers
+     * Print array with consistent spacing, catering for negative numbers. For debugging purposes.
      *
      * @param array $arr
      * @return string
