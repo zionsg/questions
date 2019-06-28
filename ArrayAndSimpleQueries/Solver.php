@@ -153,14 +153,13 @@ class Solver
     protected function runQuery($type, $start, $end)
     {
         $updates = [];
+        $blockLength = $end - $start + 1;
 
         // Move to front
         if (1 == $type) { // move to front
             if (1 == $start) {
                 return []; // already in front
             }
-
-            $blockLength = $end - $start + 1;
 
             // close gap - update offset [end + 1]
             if ($end < $this->n) {
@@ -209,8 +208,6 @@ class Solver
                 return []; // alr at the rear
             }
 
-            $blockLength = $end - $start + 1;
-
             // close gap - update offset[start]
             $pos = $start;
             $value = 0;
@@ -220,7 +217,7 @@ class Solver
             $updates[$pos] = $value;
             $this->log("[A] pos:$pos value:$value");
 
-            // update offset [n - blockLength], the new start position of the query block
+            // update offset [n - blockLength + 1], the new start position of the query block
             $pos = $this->n - $blockLength + 1;
             $value = 0;
             for ($i = ($start + 1); $i <= $this->n; $i++) {
@@ -280,9 +277,10 @@ class Solver
         }
 
         if (is_array($message)) {
-            $message = implode("\n", $message);
+            $message = implode("\n", $message) . "\n\n";
+        } else {
+            $message .= "\n";
         }
-        $message .= "\n\n";
 
         if (self::LOG_TO_CONSOLE) {
             echo $message;
