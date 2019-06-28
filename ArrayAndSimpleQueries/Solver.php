@@ -21,8 +21,10 @@
  */
 class Solver
 {
-    /** @var bool Debug flag */
+    /** @var bool Debug flags */
     const DEBUG = false;
+    const LOG_TO_CONSOLE = true;
+    const LOG_TO_FILE = false;
 
     /** @var int Single copy of n & m */
     protected $n = 0; // no. of elements in array
@@ -31,8 +33,12 @@ class Solver
     /** @var array Single copy of offsets to avoid passing around */
     protected $offsets = [];
 
+    /** @var string Log filename. For debugging */
+    protected $logFilename = 'output.txt';
+
     /** @var int Length of longest number in elements (can be positive or negative). For debugging */
     protected $longestNumLen = 2; // num can be -9, 10, 99, etc.
+
 
     /**
      * Solve question
@@ -45,6 +51,10 @@ class Solver
 
         $isStarted = false;
         $queryCnt = 0;
+
+        if (self::DEBUG) {
+            $this->logFilename = 'output_' . date('Ymd\THis') . '.txt';
+        }
 
         while ($line = fgets(STDIN)) {
             $columns = explode(' ', trim($line));
@@ -73,10 +83,12 @@ class Solver
                             strlen($largestNum),
                             strlen($largestNum - $smallestNum)
                         );
-                        echo "n: {$this->n}, m: {$this->m}\n";
-                        echo "Positions:   " . $this->printArray($positions) . "\n";
-                        echo "Elements:    " . $this->printArray($elements) . "\n";
-                        echo "Old offsets: " . $this->printArray($this->offsets) . "\n";
+                        $this->log([
+                            "n: {$this->n}, m: {$this->m}",
+                            "Positions:   " . $this->printArray($positions),
+                            "Elements:    " . $this->printArray($elements),
+                            "Old offsets: " . $this->printArray($this->offsets),
+                        ]);
                     }
 
                     $isStarted = true;
@@ -103,11 +115,13 @@ class Solver
                     $value += ($this->offsets[$i] ?? 0);
                     $result[] = $value;
                 }
-                echo "\nQuery #$queryCnt: $type $start $end\n";
-                echo "Updates: " . json_encode($updates) . "\n";
-                echo "Positions:   " . $this->printArray($positions) . "\n";
-                echo "New offsets: " . $this->printArray($this->offsets) . "\n";
-                echo "New elements:" . $this->printArray($result) . "\n\n";
+                $this->log([
+                    "Query #$queryCnt: $type $start $end",
+                    "Updates: " . json_encode($updates),
+                    "Positions:   " . $this->printArray($positions),
+                    "New offsets: " . $this->printArray($this->offsets),
+                    "New elements:" . $this->printArray($result),
+                ]);
             }
 
             if ($queryCnt == $this->m) {
@@ -204,7 +218,7 @@ class Solver
                 $value += $this->offsets[$i] ?? 0;
             }
             $updates[$pos] = $value;
-            // echo "[A] pos:$pos value:$value\n";
+            $this->log("[A] pos:$pos value:$value");
 
             // update offset [n - blockLength], the new start position of the query block
             $pos = $this->n - $blockLength + 1;
@@ -213,20 +227,20 @@ class Solver
                 $value -= $this->offsets[$i] ?? 0;
             }
             $updates[$pos] = $value;
-            // echo "[B] pos:$pos value:$value\n";
+            $this->log("[B] pos:$pos value:$value");
 
             // maintain offsets in block after query block before moving
             for ($i = ($end + 2); $i <= $this->n; $i++) {
                 $pos = $i - $blockLength;
                 $updates[$pos] = $this->offsets[$i];
-                // echo "[C] i:$i pos:$pos offset:{$this->offsets[$i]}\n";
+                $this->log("[C] i:$i pos:$pos offset:{$this->offsets[$i]}");
             }
 
             // maintain offsets in query block to be moved
             for ($i = ($start + 1); $i <= $end; $i++) { // don't touch [start] cos already modified
                 $pos = $this->n - $blockLength + ($i - $start + 1);
                 $updates[$pos] = $this->offsets[$i];
-                // echo "[D] i:$i pos:$pos offset:{$this->offsets[$i]}\n";
+                $this->log("[D] i:$i pos:$pos offset:{$this->offsets[$i]}");
             }
 
             return $updates;
@@ -251,5 +265,31 @@ class Solver
         }
 
         return $output;
+    }
+
+    /**
+     * Log to console or file. For debugging purposes.
+     *
+     * @param string|array $message
+     * @return void
+     */
+    protected function log($message)
+    {
+        if (!self::DEBUG) {
+            return;
+        }
+
+        if (is_array($message)) {
+            $message = implode("\n", $message);
+        }
+        $message .= "\n\n";
+
+        if (self::LOG_TO_CONSOLE) {
+            echo $message;
+        }
+
+        if (self::LOG_TO_FILE) {
+            file_put_contents($this->logFilename, $message, FILE_APPEND);
+        }
     }
 }
